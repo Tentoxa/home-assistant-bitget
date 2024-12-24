@@ -49,24 +49,34 @@ class BitgetPositionSensor(Entity):
     @staticmethod
     def format_position_size(value) -> str:
         value = float(value)
+        abs_value = abs(value)
+
         if value == 0:
-            return "0.0000"
-        elif value < 0.01:
-            return f"{value:.4f}"
-        elif value < 0.1:
-            return f"{value:.4f}"
-        elif value < 1:
-            return f"{value:.4f}"
-        elif value < 10:
-            return f"{value:.4f}"
-        elif value < 100:
-            return f"{value:.3f}"
-        elif value < 1000:
-            return f"{value:.2f}"
-        elif value < 10000:
-            return f"{value / 1000:.2f}k"
+            return "0.000"
+
+        if abs_value < 1:
+            return f"{value:.3f}"[:6]
+
+        elif abs_value < 10:
+            return f"{value:.3f}"[:6]
+
+        elif abs_value < 100:
+            return f"{value:.2f}"[:6]
+
+        elif abs_value < 1000:
+            return f"{value:.2f}"[:6]
+
+        elif abs_value < 10000:
+            k_value = f"{value / 1000:.2f}k"
+            if len(k_value) > 6:
+                k_value = f"{value / 1000:.1f}k"
+            return k_value
+
         else:
-            return f"{value / 1000:.1f}k"
+            k_value = f"{value / 1000:.1f}k"
+            if len(k_value) > 6:
+                k_value = f"{value / 1000:.0f}k"
+            return k_value
 
     def format_numeric_field(self, value: str) -> str:
         """Safely format numeric fields from the API response."""
