@@ -1,0 +1,12 @@
+{
+    "domain": "bitget",
+    "name": "BitGet Position Tracker for Home Assistant",
+    "codeowners": [
+        "@Tentoxa"
+    ],
+    "documentation": "https://github.com/Tentoxa/home-assistant-bitget",
+    "integration_type": "hub",
+    "iot_class": "cloud_polling",
+    "issue_tracker": "https://github.com/Tentoxa/home-assistant-bitget/issues",
+    "version": "1.0.0"
+}
