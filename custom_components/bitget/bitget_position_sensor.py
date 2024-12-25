@@ -108,9 +108,15 @@ class BitgetPositionSensor(Entity):
                     'marginRatio'
                 ]
 
-                for field in numeric_fields:
-                    if field in pos_data:
-                        pos_data[f'formatted_{field}'] = self.format_numeric_field(pos_data[field])
+                for field in numeric_fields:  # Only iterate through numeric fields
+                    if field in pos_data:  # Check if field exists in pos_data
+                        if field == 'unrealizedPL':
+                            value = float(pos_data[field] if pos_data[field] not in (None, '', 'null') else 0)
+                            pos_data[
+                                f'formatted_{field}'] = f"+{self.format_numeric_field(str(value))}" if value > 0 else self.format_numeric_field(
+                                str(value))
+                        else:
+                            pos_data[f'formatted_{field}'] = self.format_numeric_field(pos_data[field])
 
                 self._data = pos_data
                 self._state = float(pos_data.get('unrealizedPL', 0))
