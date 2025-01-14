@@ -2,10 +2,10 @@
 
 import logging
 from datetime import timedelta
-from .bitget_api import BitgetPositionAPI, BitgetAPIError
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import STATE_UNKNOWN
+from bitpy import BitgetAPI, BitgetAPIError
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +22,10 @@ class BitgetPositionSensor(Entity):
         self._state = STATE_UNKNOWN
         self._data = {}
 
-        self._api = BitgetPositionAPI(
+        self._api = BitgetAPI(
             api_key=api_key,
             secret_key=secret_key,
             api_passphrase=passphrase,
-            debug=False
         )
 
     @property
@@ -91,38 +90,24 @@ class BitgetPositionSensor(Entity):
         logger.debug("Updating %s - args", self._name, args)
 
         try:
-            position = self._api.get_single_position(
+            position = self._api.position.get_single_position(
                 symbol=self._symbol,
                 product_type=self._product_type,
                 margin_coin=self._margin_coin
             )
 
             if position.data:
-                pos_data = position.data[0].__dict__
-
-                numeric_fields = [
-                    'openDelegateSize', 'marginSize', 'available', 'locked',
-                    'total', 'leverage', 'achievedProfits', 'openPriceAvg',
-                    'unrealizedPL', 'liquidationPrice', 'keepMarginRate',
-                    'markPrice', 'breakEvenPrice', 'totalFee', 'deductedFee',
-                    'marginRatio'
-                ]
-
-                for field in numeric_fields:  # Only iterate through numeric fields
-                    if field in pos_data:  # Check if field exists in pos_data
-                        if field == 'unrealizedPL':
-                            value = float(pos_data[field] if pos_data[field] not in (None, '', 'null') else 0)
-                            pos_data[
-                                f'formatted_{field}'] = f"+{self.format_numeric_field(str(value))}" if value > 0 else self.format_numeric_field(
-                                str(value))
-                        else:
-                            pos_data[f'formatted_{field}'] = self.format_numeric_field(pos_data[field])
+                pos_data = position.data[0]
+                value = float(pos_data.unrealizedPL if pos_data.unrealizedPL not in (None, '', 'null') else 0)
+                pos_data.formatted_unrealizedPL = (f"+{self.format_numeric_field(str(value))}"
+                                                   if value > 0
+                                                   else self.format_numeric_field(str(value)))
 
                 self._data = pos_data
-                self._state = float(pos_data.get('unrealizedPL', 0))
+                self._state = value
             else:
                 self._state = 0
-                self._data = {}
+                self._data = None
 
         except (BitgetAPIError, ConnectionError) as error:
             logger.error("Error updating %s - %s", self._name, error)
